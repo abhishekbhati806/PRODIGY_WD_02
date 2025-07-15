@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Advanced Stopwatch</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600&display=swap');
+
+    :root {
+      --bg: linear-gradient(135deg, #1f1c2c, #928dab);
+      --text: #fff;
+      --accent: #00ffc3;
+      --glass: rgba(255, 255, 255, 0.05);
+      --shadow: rgba(0, 0, 0, 0.4);
+    }
+
+    [data-theme="light"] {
+      --bg: linear-gradient(135deg, #dbeafe, #fef9c3);
+      --text: #111;
+      --accent: #007bff;
+      --glass: rgba(0, 0, 0, 0.05);
+      --shadow: rgba(0, 0, 0, 0.1);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: 'Outfit', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      min-height: 100vh;
+      backdrop-filter: blur(10px);
+      transition: 0.3s ease all;
+      background-size: 400% 400%;
+      animation: gradient 15s ease infinite;
+    }
+
+    @keyframes gradient {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .container {
+      background: var(--glass);
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 10px 25px var(--shadow);
+      max-width: 480px;
+      width: 100%;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 2.2em;
+      margin-bottom: 10px;
+    }
+
+    .time {
+      font-size: 2.8em;
+      margin: 20px 0;
+      font-weight: 600;
+      animation: pulse 2s infinite ease-in-out;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.02); opacity: 0.9; }
+    }
+
+    .buttons, .utility {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin: 10px 0;
+    }
+
+    button {
+      background: var(--accent);
+      color: var(--text);
+      border: none;
+      padding: 10px 16px;
+      font-size: 1em;
+      border-radius: 12px;
+      cursor: pointer;
+      box-shadow: 0 4px 10px var(--shadow);
+      transition: 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      opacity: 0.9;
+    }
+
+    .laps {
+      margin-top: 15px;
+      max-height: 160px;
+      overflow-y: auto;
+      background: var(--glass);
+      padding: 10px;
+      border-radius: 10px;
+      text-align: left;
+      box-shadow: inset 0 0 10px var(--shadow);
+    }
+
+    .laps li {
+      list-style: none;
+      padding: 6px 10px;
+      margin-bottom: 5px;
+      background: rgba(255, 255, 255, 0.08);
+      border-left: 4px solid var(--accent);
+      border-radius: 4px;
+    }
+
+    .theme-picker {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 10px;
+      align-items: center;
+    }
+
+    .theme-picker input[type=color] {
+      width: 60px;
+      height: 30px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    @media screen and (max-width: 480px) {
+      .container {
+        padding: 20px;
+      }
+      .time {
+        font-size: 2.2em;
+      }
+      button {
+        padding: 8px 14px;
+        font-size: 0.95em;
+      }
+    }
+  </style>
+</head>
+<body data-theme="dark">
+  <div class="container">
+    <h1><i class="fas fa-stopwatch"></i> Stopwatch</h1>
+    <div class="time" id="display">00:00:00.000</div>
+
+    <div class="buttons">
+      <button onclick="toggleStartPause()" id="startPauseBtn"><i class="fas fa-play"></i> Start</button>
+      <button onclick="reset()"><i class="fas fa-rotate-left"></i> Reset</button>
+      <button onclick="lap()"><i class="fas fa-flag"></i> Lap</button>
+      <button onclick="clearLaps()"><i class="fas fa-trash"></i> Clear</button>
+    </div>
+
+    <ul class="laps" id="laps"></ul>
+
+    <div class="utility">
+      <button onclick="toggleTheme()"><i class="fas fa-circle-half-stroke"></i> Theme</button>
+      <button onclick="toggleCountdown()"><i class="fas fa-clock"></i> Countdown</button>
+      <button onclick="exportLaps()"><i class="fas fa-download"></i> Export</button>
+      <button onclick="importBackup()"><i class="fas fa-upload"></i> Import</button>
+      <button onclick="downloadBackup()"><i class="fas fa-cloud-download-alt"></i> Backup</button>
+      <button onclick="toggleSmartMode()"><i class="fas fa-bolt"></i> Smart Mode</button>
+      <button onclick="startVoiceControl()" id="voiceBtn"><i class="fas fa-microphone-slash"></i> Voice Off</button>
+      <button onclick="startRecording()"><i class="fas fa-video"></i> Record</button>
+    </div>
+
+    <div class="theme-picker">
+      <label>Accent Color <input type="color" onchange="changeAccent(this.value)" /></label>
+    </div>
+  </div>
+
+  <!-- Audio -->
+  <audio id="beep" src="https://www.soundjay.com/buttons/sounds/beep-07.mp3" preload="auto"></audio>
+  <audio id="startSound" src="https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3" preload="auto"></audio>
+
+  <script>
+    let startTime = 0, elapsed = 0, running = false, interval;
+    let countdown = false, countdownDuration = 60000;
+    let smartMode = false;
+    let voiceActive = false;
+    let recognition;
+
+    const display = document.getElementById('display');
+    const laps = document.getElementById('laps');
+    const beep = document.getElementById('beep');
+    const startSound = document.getElementById('startSound');
+    const startPauseBtn = document.getElementById('startPauseBtn');
+    const voiceBtn = document.getElementById('voiceBtn');
+
+    function formatTime(ms) {
+      const date = new Date(ms);
+      return `${String(date.getUTCHours()).padStart(2, '0')}:${
+              String(date.getUTCMinutes()).padStart(2, '0')}:${
+              String(date.getUTCSeconds()).padStart(2, '0')}.${String(date.getUTCMilliseconds()).padStart(3, '0')}`;
+    }
+
+    function updateDisplay() {
+      const now = Date.now();
+      let time = countdown ? countdownDuration - (now - startTime) : now - startTime + elapsed;
+      if (countdown && time <= 0) {
+        reset();
+        alert("⏰ Countdown finished!");
+        return;
+      }
+      display.textContent = formatTime(time);
+
+      if (smartMode && time % 10000 < 10 && time > 1000) lap();
+      localStorage.setItem('elapsed', time);
+    }
+
+    function toggleStartPause() {
+      if (!running) {
+        startTime = Date.now();
+        interval = setInterval(updateDisplay, 10);
+        running = true;
+        startPauseBtn.innerHTML = `<i class="fas fa-pause"></i> Pause`;
+        startSound.play();
+        navigator.vibrate?.([100, 50, 100]);
+      } else {
+        elapsed += Date.now() - startTime;
+        clearInterval(interval);
+        running = false;
+        startPauseBtn.innerHTML = `<i class="fas fa-play"></i> Start`;
+        beep.play();
+        navigator.vibrate?.(50);
+        localStorage.setItem('elapsed', elapsed);
+      }
+    }
+
+    function reset() {
+      clearInterval(interval);
+      startTime = 0;
+      elapsed = 0;
+      running = false;
+      display.textContent = "00:00:00.000";
+      startPauseBtn.innerHTML = `<i class="fas fa-play"></i> Start`;
+      localStorage.clear();
+      beep.play();
+    }
+
+    function lap() {
+      if (running) {
+        const now = Date.now();
+        const time = countdown ? countdownDuration - (now - startTime) : now - startTime + elapsed;
+        const li = document.createElement("li");
+        li.textContent = `Lap ${laps.children.length + 1}: ${formatTime(time)}`;
+        laps.appendChild(li);
+        laps.scrollTop = laps.scrollHeight;
+        saveLaps();
+        beep.play();
+      }
+    }
+
+    function clearLaps() {
+      laps.innerHTML = "";
+      localStorage.removeItem('laps');
+    }
+
+    function toggleTheme() {
+      const isDark = document.body.getAttribute("data-theme") === "dark";
+      document.body.setAttribute("data-theme", isDark ? "light" : "dark");
+      localStorage.setItem('theme', isDark ? 'light' : 'dark');
+    }
+
+    function toggleCountdown() {
+      countdown = !countdown;
+      alert(`Mode: ${countdown ? "Countdown" : "Stopwatch"}`);
+    }
+
+    function toggleSmartMode() {
+      smartMode = !smartMode;
+      alert(`Smart Mode: ${smartMode ? "On" : "Off"}`);
+    }
+
+    function exportLaps() {
+      let content = "Lap Times:\n";
+      [...laps.children].forEach(li => content += li.textContent + "\n");
+      const blob = new Blob([content], { type: "text/plain" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "lap_times.txt";
+      link.click();
+      URL.revokeObjectURL(link.href);
+    }
+
+    function saveLaps() {
+      const lapData = [...laps.children].map(li => li.textContent);
+      localStorage.setItem('laps', JSON.stringify(lapData));
+    }
+
+    function loadLaps() {
+      const saved = JSON.parse(localStorage.getItem('laps') || '[]');
+      saved.forEach(text => {
+        const li = document.createElement("li");
+        li.textContent = text;
+        laps.appendChild(li);
+      });
+    }
+
+    function changeAccent(color) {
+      document.documentElement.style.setProperty('--accent', color);
+      localStorage.setItem('accent', color);
+    }
+
+    function downloadBackup() {
+      const data = {
+        elapsed,
+        laps: [...laps.children].map(li => li.textContent),
+        theme: document.body.getAttribute("data-theme"),
+      };
+      const blob = new Blob([JSON.stringify(data)], { type: "application/json" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "stopwatch_backup.json";
+      link.click();
+    }
+
+    function importBackup() {
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = ".json";
+      input.onchange = e => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          const data = JSON.parse(reader.result);
+          elapsed = data.elapsed;
+          display.textContent = formatTime(elapsed);
+          laps.innerHTML = "";
+          data.laps.forEach(text => {
+            const li = document.createElement("li");
+            li.textContent = text;
+            laps.appendChild(li);
+          });
+          if (data.theme) document.body.setAttribute("data-theme", data.theme);
+        };
+        reader.readAsText(file);
+      };
+      input.click();
+    }
+
+    function startVoiceControl() {
+      if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+        alert("Voice control not supported");
+        return;
+      }
+
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+      if (!recognition) {
+        recognition = new SpeechRecognition();
+        recognition.lang = "en-US";
+        recognition.continuous = true;
+        recognition.onresult = event => {
+          const command = event.results[event.results.length - 1][0].transcript.toLowerCase();
+          console.log("Voice Command:", command);
+          if (command.includes("start")) toggleStartPause();
+          else if (command.includes("stop") || command.includes("pause")) toggleStartPause();
+          else if (command.includes("reset")) reset();
+          else if (command.includes("lap")) lap();
+          else alert("Unrecognized command: " + command);
+        };
+        recognition.onerror = e => {
+          alert("Voice error: " + e.error);
+          voiceActive = false;
+          voiceBtn.innerHTML = `<i class="fas fa-microphone-slash"></i> Voice Off`;
+        };
+      }
+
+      if (!voiceActive) {
+        recognition.start();
+        voiceActive = true;
+        voiceBtn.innerHTML = `<i class="fas fa-microphone"></i> Voice On`;
+      } else {
+        recognition.stop();
+        voiceActive = false;
+        voiceBtn.innerHTML = `<i class="fas fa-microphone-slash"></i> Voice Off`;
+      }
+    }
+
+    let mediaRecorder;
+    function startRecording() {
+      navigator.mediaDevices.getDisplayMedia({ video: true }).then(stream => {
+        mediaRecorder = new MediaRecorder(stream);
+        const chunks = [];
+        mediaRecorder.ondataavailable = e => chunks.push(e.data);
+        mediaRecorder.onstop = () => {
+          const blob = new Blob(chunks, { type: "video/webm" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = "stopwatch_recording.webm";
+          a.click();
+        };
+        mediaRecorder.start();
+        setTimeout(() => {
+          mediaRecorder.stop();
+        }, 10000); // Stop after 10 seconds
+      }).catch(console.error);
+    }
+
+    function restoreTheme() {
+      const theme = localStorage.getItem('theme');
+      if (theme) document.body.setAttribute("data-theme", theme);
+      const accent = localStorage.getItem('accent');
+      if (accent) changeAccent(accent);
+    }
+
+    window.onload = () => {
+      loadLaps();
+      restoreTheme();
+    };
+  </script>
+</body>
+</html>
